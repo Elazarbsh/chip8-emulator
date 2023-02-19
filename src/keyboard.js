@@ -26,8 +26,6 @@ export class Keyboard {
 
     keyState = new Array(16);
 
-
-
     onKeyDown(e) {
         const key = e.keyCode;
         if (!(key in this.keymap)) {

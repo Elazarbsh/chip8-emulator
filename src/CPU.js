@@ -1,17 +1,16 @@
-import { Display } from "./display.js";
+import { FrameBuffer } from "./frame-buffer.js";
 import { Keyboard } from "./keyboard.js";
+import { Memory } from "./memory.js";
+import { Stack } from "./stack.js";
+import { Display } from "./display.js";
 
 export class CPU {
     rows = 32;
     cols = 64;
-    memorySize = 4096;
     delayTimerFrequency = 1000 / 60;
     soundTimerFrequency = 1000 / 60;
     registers = new Uint8Array(16);
-    stack = new Uint16Array(16);
-    memory = new Uint8Array(this.memorySize);
     I = 0x50;
-    SP = 0;
     PC = 0x200;
     delayTimer = 0;
     soundTimer = 0;
@@ -35,8 +34,11 @@ export class CPU {
         0xF: [0xF0, 0x80, 0xF0, 0x80, 0x80],
     }
 
-    display = new Display();
+    frameBuffer = new FrameBuffer();
     keyboard = new Keyboard();
+    memory = new Memory();
+    stack = new Stack();
+    display = new Display(this.frameBuffer);
 
     start() {
         let cycleInterval = setInterval(this.cycle.bind(this), 1000 / 700);
@@ -44,14 +46,8 @@ export class CPU {
         let soundTimerInterval = setInterval(this.updateSoundTimer.bind(this), this.soundTimerFrequency);
     }
 
-    bla(){
-        console.log(this);
-    }
-
     restart() {
         this.registers = new Uint8Array(16);
-        this.stack = new Uint16Array(16);
-        this.memory = new Uint8Array(memorySize);
         I = 0x50;
         this.SP = 0;
         this.PC = 0x200;
@@ -62,24 +58,19 @@ export class CPU {
     loadFontToMemory() {
         let address = 0x050;
         for (const char in this.font) {
-            for (const byte of this.font[char]) {
-                this.memory[address] = byte;
-                address++;
-            }
+            this.memory.load(this.font[char], address);
+            address += this.font[char].length;
         }
     }
 
     loadProgramToMemory(program) {
-        let address = 0x200;
-        for (const byte of program) {
-            this.memory[address] = byte;
-            address++;
-        }
+        let startAddress = 0x200;
+        this.memory.load(program, startAddress);
     }
 
     fetchCommand() {
-        const b1 = this.memory[this.PC];
-        const b2 = this.memory[this.PC + 1];
+        const b1 = this.memory.read(this.PC);
+        const b2 = this.memory.read(this.PC + 1);
         this.PC += 2;
         return b1 << 8 | b2;
     }
@@ -101,9 +92,6 @@ export class CPU {
             this.soundTimer--;
         }
     }
-
-
-
 
     decode(instruction) {
         const opcode = instruction & 0xF000;
@@ -195,7 +183,7 @@ export class CPU {
                 break;
             case 0xD000:
                 this.draw(vx, vy, n);
-                this.display.updateCanvas();
+                this.display.update();
                 break;
 
             case 0xE000:
@@ -250,16 +238,13 @@ export class CPU {
     // 00E0
     // Clear the display.
     cls() {
-        display.clearScreen();
+        frameBuffer.clearScreen();
     }
 
     // 00EE
     // Return from a subroutine.
     ret() {
-        if (this.SP > 0) {
-            this.SP--;
-        }
-        this.PC = this.stack[this.SP];
+        this.PC = this.stack.pop();
     }
 
     // 1NNN
@@ -271,8 +256,7 @@ export class CPU {
     // 2NNN
     // Call subroutine at nnn.
     call(nnn) {
-        this.stack[this.SP] = this.PC;
-        this.SP++;
+        this.stack.push(this.PC);
         this.PC = nnn;
     }
 
@@ -421,17 +405,17 @@ export class CPU {
             }
             let xCoordinate = this.registers[vx] % this.cols;
 
-            const fontByte = this.memory[this.I + i];
+            const fontByte = this.memory.read(this.I + i);
             for (let j = 128; j >= 1; j /= 2) {
                 if (xCoordinate >= this.cols) {
                     break;
                 }
                 const currentBit = fontByte & j;
-                if (currentBit != 0 && this.display.getPixelAt(xCoordinate, yCoordinate) != 0) {
-                    this.display.setPixelOff(xCoordinate, yCoordinate);
+                if (currentBit != 0 && this.frameBuffer.getPixelAt(xCoordinate, yCoordinate) != 0) {
+                    this.frameBuffer.setPixelOff(xCoordinate, yCoordinate);
                     this.registers[0xF] = 1;
-                } else if (currentBit != 0 && this.display.getPixelAt(xCoordinate, yCoordinate) == 0) {
-                    this.display.setPixelOn(xCoordinate, yCoordinate);
+                } else if (currentBit != 0 && this.frameBuffer.getPixelAt(xCoordinate, yCoordinate) == 0) {
+                    this.frameBuffer.setPixelOn(xCoordinate, yCoordinate);
                 }
                 xCoordinate++;
             }
@@ -502,7 +486,7 @@ export class CPU {
     toDecimal(vx) {
         const digits = this.registers[vx].toString().padStart(3, '0').split('').map(Number);
         for (let i = 0; i <= 2; i++) {
-            this.memory[this.I + i] = digits[i];
+            this.memory.write(this.I + i, digits[i]);
         }
     }
 
@@ -510,7 +494,7 @@ export class CPU {
     // Store registers V0 through Vx in memory starting at location I.
     saveRegisters(vx) {
         for (let i = 0; i <= vx; i++) {
-            this.memory[this.I + i] = this.registers[i];
+            this.memory.read(this.I + i) = this.registers[i];
         }
     }
 
@@ -518,7 +502,7 @@ export class CPU {
     // Read registers V0 through Vx from memory starting at location I.
     loadRegisters(vx) {
         for (let i = 0; i <= vx; i++) {
-            this.registers[i] = this.memory[this.I + i];
+            this.registers[i] = this.memory.read(this.I + i);
         }
     }
 
