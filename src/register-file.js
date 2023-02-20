@@ -1,13 +1,21 @@
 
 export class RegisterFile{
-    numOfRegisters = 16;
-    registers = new Uint8Array(16);
 
-    constructor(numOfRegisters){
+    constructor(numOfRegisters = 16){
         this.numOfRegisters = numOfRegisters;
+        this.registers = new Uint8Array(numOfRegisters);
     }
+
     getRegister(regIndex){
         return this.registers[regIndex];
+    }
+
+    addToReg(regIndex, value){
+        this.registers[regIndex] += value;
+    }
+
+    copyReg(target, source){
+        this.registers[target] = this.registers[source];
     }
 
     setRegister(regIndex, value){

@@ -3,13 +3,13 @@ import { Keyboard } from "./keyboard.js";
 import { Memory } from "./memory.js";
 import { Stack } from "./stack.js";
 import { Display } from "./display.js";
+import { RegisterFile } from "./register-file.js";
 
 export class CPU {
     rows = 32;
     cols = 64;
     delayTimerFrequency = 1000 / 60;
     soundTimerFrequency = 1000 / 60;
-    registers = new Uint8Array(16);
     I = 0x50;
     PC = 0x200;
     delayTimer = 0;
@@ -34,11 +34,12 @@ export class CPU {
         0xF: [0xF0, 0x80, 0xF0, 0x80, 0x80],
     }
 
-    frameBuffer = new FrameBuffer();
+    frameBuffer = new FrameBuffer(this.rows, this.cols);
     keyboard = new Keyboard();
     memory = new Memory();
     stack = new Stack();
     display = new Display(this.frameBuffer);
+    registers = new RegisterFile(16);
 
     start() {
         let cycleInterval = setInterval(this.cycle.bind(this), 1000 / 700);
@@ -47,7 +48,6 @@ export class CPU {
     }
 
     restart() {
-        this.registers = new Uint8Array(16);
         I = 0x50;
         this.SP = 0;
         this.PC = 0x200;
@@ -92,6 +92,18 @@ export class CPU {
             this.soundTimer--;
         }
     }
+
+    // decode(rawInstruction) {
+    //     return {
+    //         opcode: instruction & 0xF000,
+    //         func: instruction & 0x000F,
+    //         vx: (instruction & 0x0F00) >> 8,
+    //         vy: (instruction & 0x00F0) >> 4,
+    //         n: instruction & 0x000F,
+    //         nn: instruction & 0x00FF,
+    //         nnn: instruction & 0x0FFF,
+    //     }
+    // }
 
     decode(instruction) {
         const opcode = instruction & 0xF000;
@@ -263,7 +275,7 @@ export class CPU {
     // 3XNN
     // Skip next instruction if Vx = nn.
     skipEqi(vx, nn) {
-        if (this.registers[vx] == nn) {
+        if (this.registers.getRegister(vx) == nn) {
             this.PC += 2;
         }
     }
@@ -271,7 +283,7 @@ export class CPU {
     // 4XNN
     // Skip next instruction if Vx != nn.
     skipNeqi(vx, nn) {
-        if (this.registers[vx] != nn) {
+        if (this.registers.getRegister(vx) != nn) {
             this.PC += 2;
         }
     }
@@ -279,7 +291,7 @@ export class CPU {
     // 5XY0
     // Skip next instruction if Vx = Vy.
     skipEq(vx, vy) {
-        if (this.registers[vx] == this.registers[vy]) {
+        if (this.registers.getRegister(vx) == this.registers.getRegister(vy)) {
             this.PC += 2;
         }
     }
@@ -287,90 +299,90 @@ export class CPU {
     // 6XNN
     // Set Vx = nn.
     loadi(vx, nn) {
-        this.registers[vx] = nn;
+        this.registers.setRegister(vx, nn);
     }
 
     // 7XNN
     // Set Vx = Vx + nn.
     addi(vx, nn) {
-        this.registers[vx] += nn;
+        this.registers.addToReg(vx, nn);
     }
 
     // 8XY0
     // Set Vx = Vy.
     load(vx, vy) {
-        this.registers[vx] = this.registers[vy];
+        this.registers.copyReg(vx, vy);
     }
 
     // 8XY1
     // Set Vx = Vx OR Vy.
     or(vx, vy) {
-        this.registers[vx] = this.registers[vx] | this.registers[vy];
+        this.registers.setRegister(vx, this.registers.getRegister(vx) | this.registers.getRegister(vy));
     }
 
     // 8XY2
     // Set Vx = Vx AND Vy.
     and(vx, vy) {
-        this.registers[vx] = this.registers[vx] & this.registers[vy];
+        this.registers.setRegister(vx, this.registers.getRegister(vx) & this.registers.getRegister(vy));
     }
 
     // 8XY3
     // Set Vx = Vx XOR Vy.
     xor(vx, vy) {
-        this.registers[vx] = this.registers[vx] ^ this.registers[vy];
+        this.registers.setRegister(vx,this.registers.getRegister(vx) ^ this.registers.getRegister(vy));
     }
 
     // 8XY4
     // Set Vx = Vx + Vy, set VF = carry.
     add(vx, vy) {
-        if (this.registers[vx] + this.registers[vy] > 255) {
-            this.registers[0xF] = 1;
+        if (this.registers.getRegister(vx) + this.registers.getRegister(vy) > 255) {
+            this.registers.setRegister(0xF,1);
         }
-        this.registers[vx] += this.registers[vy];
+        this.registers.addToReg(vx, this.registers.getRegister(vy));
     }
 
     // 8XY5
     // Set Vx = Vx - Vy, set VF = NOT borrow.
     sub(vx, vy) {
-        if (this.registers[vx] > this.registers[vy]) {
-            this.registers[0xF] = 1;
+        if (this.registers.getRegister(vx) > this.registers.getRegister(vy)) {
+            this.registers.setRegister(0xF, 1);
         } else {
-            this.registers[0xF] = 0;
+            this.registers.setRegister(0xF, 0);
         }
-        this.registers[vx] = this.registers[vx] - this.registers[vy];
+        this.registers.setRegister(vx, this.registers.getRegister(vx) - this.registers.getRegister(vy));
     }
 
     // 8XY6
     // Set Vx = Vx SHR 1.
     shiftRight(vx) {
-        this.registers[0xF] = this.registers[vx] & 0x01;
-        this.registers[vx] = this.registers[vx] >> 1;
+        this.registers.setRegister(0xF, this.registers.getRegister(vx) & 0x01);
+        this.registers.setRegister(vx, this.registers.getRegister(vx) >> 1);
     }
 
     // 8XY7
     // Set Vx = Vy - Vx, set VF = NOT borrow.
     subReverse(vx, vy) {
-        if (this.registers[vy] > this.registers[vx]) {
-            this.registers[0xF] = 1;
+        if (this.registers.getRegister(vy) > this.registers.getRegister(vx)) {
+            this.registers.setRegister(0xF, 1);
         }
         else {
-            this.registers[0xF] = 0;
+            this.registers.setRegister(0xF, 0);
         }
-        this.registers[vx] = this.registers[vy] - this.registers[vx];
+        this.registers.setRegister(vx, this.registers.getRegister(vy) - this.registers.getRegister(vx));
     }
 
     // 8XYE
     // Set Vx = Vx SHL 1.
     shiftLeft(vx) {
-        this.registers[0xF] = this.registers[vx] & 0x01;
-        this.registers[vx] = this.registers[vx] << 1;
+        this.registers.setRegister(0xF, this.registers.getRegister(vx) & 0x01);
+        this.registers.setRegister(vx, this.registers.getRegister(vx) << 1);
     }
 
 
     // 9XY0
     // Skip next instruction if Vx != Vy.
     skipNeq(vx, vy) {
-        if (this.registers[vx] != this.registers[vy]) {
+        if (this.registers.getRegister(vx) != this.registers.getRegister(vy)) {
             this.PC += 2;
         }
     }
@@ -384,36 +396,36 @@ export class CPU {
     // BNNN
     // Jump to location nnn + V0.
     jumpOffset(nnn) {
-        this.PC = this.registers[0] + nnn;
+        this.PC = this.registers.getRegister(0) + nnn;
     }
 
     // CXNN
     // Set Vx = random byte AND nn.
     rnd(vx, nn) {
-        this.registers[vx] = Math.floor(Math.random() * 256) & nn;
+        this.registers.setRegister(vx, Math.floor(Math.random() * 256) & nn);
     }
 
     // DXYN
     // Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision.
     draw(vx, vy, n) {
-        this.registers[0xF] = 0;
-        let yCoordinate = this.registers[vy] % this.rows;
+        this.registers.setRegister(0xF, 0);
+        let yCoordinate = this.registers.getRegister(vy) % this.frameBuffer.rowCount;
 
         for (let i = 0; i < n; i++) {
-            if (yCoordinate >= this.rows) {
+            if (yCoordinate >= this.frameBuffer.rowCount) {
                 break;
             }
-            let xCoordinate = this.registers[vx] % this.cols;
+            let xCoordinate = this.registers.getRegister(vx) % this.frameBuffer.colCount;
 
             const fontByte = this.memory.read(this.I + i);
             for (let j = 128; j >= 1; j /= 2) {
-                if (xCoordinate >= this.cols) {
+                if (xCoordinate >= this.frameBuffer.colCount) {
                     break;
                 }
                 const currentBit = fontByte & j;
                 if (currentBit != 0 && this.frameBuffer.getPixelAt(xCoordinate, yCoordinate) != 0) {
                     this.frameBuffer.setPixelOff(xCoordinate, yCoordinate);
-                    this.registers[0xF] = 1;
+                    this.registers.setRegister(0xF, 1);
                 } else if (currentBit != 0 && this.frameBuffer.getPixelAt(xCoordinate, yCoordinate) == 0) {
                     this.frameBuffer.setPixelOn(xCoordinate, yCoordinate);
                 }
@@ -427,7 +439,7 @@ export class CPU {
     // EX9E
     //Skip next instruction if key with the value of Vx is pressed.
     skipPressed(vx) {
-        if (keyboard.isKeyPressed(this.registers[vx])) {
+        if (this.keyboard.isKeyPressed(this.registers.getRegister(vx))) {
             this.PC += 2;
         }
     }
@@ -435,7 +447,7 @@ export class CPU {
     // EXA1
     // Skip next instruction if key with the value of Vx is not pressed.
     skipNotPressed(vx) {
-        if (!this.keyboard.isKeyPressed(this.registers[vx])) {
+        if (!this.keyboard.isKeyPressed(this.registers.getRegister(vx))) {
             this.PC += 2;
         }
     }
@@ -443,48 +455,48 @@ export class CPU {
     // FX07 
     // Set Vx = delay timer value.
     loadVxDt(vx) {
-        this.registers[vx] = this.delayTimer;
+        this.registers.setRegister(vx, this.delayTimer);
     }
 
     // FX15
     // Set delay timer = Vx.
     loadDtVx(vx) {
-        this.delayTimer = this.registers[vx];
+        this.delayTimer = this.registers.getRegister(vx);
     }
 
     // FX18
     // Set sound timer = Vx.
     loadStVx(vx) {
-        this.soundTimer = this.registers[vx];
+        this.soundTimer = this.registers.getRegister(vx);
     }
 
     // FX0A
     // Wait for a key press, store the value of the key in Vx.
     getKey(vx) {
-        const keyPressed = keyboard.getAnyKeyPressed;
+        const keyPressed = this.keyboard.getAnyKeyPressed;
         if (keyPressed >= 0) {
             this.PC -= 2;
         } else {
-            this.registers[vx] = keyPressed;
+            this.registers.setRegister(vx, keyPressed);
         }
     }
 
     // FX1E
     // Set I = I + Vx.
     addIndex(vx) {
-        this.I = this.I + this.registers[vx];
+        this.I = this.I + this.registers.getRegister(vx);
     }
 
     // FX29
     // Set I = location of sprite for digit Vx.
     indexTofontCharacter(vx) {
-        this.I = 0x50 + (this.registers[vx] * 5);
+        this.I = 0x50 + (this.registers.getRegister(vx) * 5);
     }
 
     // FX33
     // Store BCD representation of Vx in memory locations I, I+1, and I+2.
     toDecimal(vx) {
-        const digits = this.registers[vx].toString().padStart(3, '0').split('').map(Number);
+        const digits = this.registers.getRegister(vx).toString().padStart(3, '0').split('').map(Number);
         for (let i = 0; i <= 2; i++) {
             this.memory.write(this.I + i, digits[i]);
         }
@@ -494,7 +506,7 @@ export class CPU {
     // Store registers V0 through Vx in memory starting at location I.
     saveRegisters(vx) {
         for (let i = 0; i <= vx; i++) {
-            this.memory.read(this.I + i) = this.registers[i];
+            this.memory.read(this.I + i) = this.registers.getRegister(i);
         }
     }
 
@@ -502,7 +514,7 @@ export class CPU {
     // Read registers V0 through Vx from memory starting at location I.
     loadRegisters(vx) {
         for (let i = 0; i <= vx; i++) {
-            this.registers[i] = this.memory.read(this.I + i);
+            this.registers.setRegister(i, this.memory.read(this.I + i));
         }
     }
 
