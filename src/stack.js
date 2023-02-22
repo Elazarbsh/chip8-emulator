@@ -1,6 +1,10 @@
 export class Stack{
-    stack = new Uint16Array(16);
     SP = 0;
+    
+    constructor(size = 16){
+        this.size = size;
+        this.stack = new Uint16Array(size);
+    }
 
     push(value){
         this.stack[this.SP] = value;

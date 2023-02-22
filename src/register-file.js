@@ -1,9 +1,9 @@
 
 export class RegisterFile{
 
-    constructor(numOfRegisters = 16){
-        this.numOfRegisters = numOfRegisters;
-        this.registers = new Uint8Array(numOfRegisters);
+    constructor(registerCount = 16){
+        this.registerCount = registerCount;
+        this.registers = new Uint8Array(registerCount);
     }
 
     getRegister(regIndex){

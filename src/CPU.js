@@ -1,84 +1,46 @@
-import { FrameBuffer } from "./frame-buffer.js";
-import { Keyboard } from "./keyboard.js";
-import { Memory } from "./memory.js";
-import { Stack } from "./stack.js";
-import { Display } from "./display.js";
-import { RegisterFile } from "./register-file.js";
+import { DELAY_TIMER_FREQ, SOUND_TIMER_FREQ } from "../data/frequencies.js";
+import { PROGRAM_ADDRESS, FONT_ADDRESS } from "../data/addresses.js";
 
 export class CPU {
-    rows = 32;
-    cols = 64;
-    delayTimerFrequency = 1000 / 60;
-    soundTimerFrequency = 1000 / 60;
-    I = 0x50;
-    PC = 0x200;
+    I = FONT_ADDRESS;
+    PC = PROGRAM_ADDRESS;
     delayTimer = 0;
     soundTimer = 0;
 
-    font = {
-        0: [0xF0, 0x90, 0x90, 0x90, 0xF0],
-        1: [0x20, 0x60, 0x20, 0x20, 0x70],
-        2: [0xF0, 0x10, 0xF0, 0x80, 0xF0],
-        3: [0xF0, 0x10, 0xF0, 0x10, 0xF0],
-        4: [0x90, 0x90, 0xF0, 0x10, 0x10],
-        5: [0xF0, 0x80, 0xF0, 0x10, 0xF0],
-        6: [0xF0, 0x80, 0xF0, 0x90, 0xF0],
-        7: [0xF0, 0x10, 0x20, 0x40, 0x40],
-        8: [0xF0, 0x90, 0xF0, 0x90, 0xF0],
-        9: [0xF0, 0x90, 0xF0, 0x10, 0xF0],
-        0xA: [0xF0, 0x90, 0xF0, 0x90, 0x90],
-        0xB: [0xE0, 0x90, 0xE0, 0x90, 0xE0],
-        0xC: [0xF0, 0x80, 0x80, 0x80, 0xF0],
-        0xD: [0xE0, 0x90, 0x90, 0x90, 0xE0],
-        0xE: [0xF0, 0x80, 0xF0, 0x80, 0xF0],
-        0xF: [0xF0, 0x80, 0xF0, 0x80, 0x80],
+    constructor(memory, stack, registers, frameBuffer, display, keyboard){
+        this.memory = memory;
+        this.stack = stack;
+        this.registers = registers;
+        this.frameBuffer = frameBuffer;
+        this.display = display;
+        this.keyboard = keyboard;
+        this.delayTimerInterval = setInterval(this.updateDelayTimer.bind(this), DELAY_TIMER_FREQ);
+        this.soundTimerInterval = setInterval(this.updateSoundTimer.bind(this), SOUND_TIMER_FREQ);
     }
 
-    frameBuffer = new FrameBuffer(this.rows, this.cols);
-    keyboard = new Keyboard();
-    memory = new Memory();
-    stack = new Stack();
-    display = new Display(this.frameBuffer);
-    registers = new RegisterFile(16);
-
-    start() {
-        let cycleInterval = setInterval(this.cycle.bind(this), 1000 / 700);
-        let delayTimerInterval = setInterval(this.updateDelayTimer.bind(this), this.delayTimerFrequency);
-        let soundTimerInterval = setInterval(this.updateSoundTimer.bind(this), this.soundTimerFrequency);
+    startTimers(){
+        this.delayTimerInterval = setInterval(this.updateDelayTimer.bind(this), DELAY_TIMER_FREQ);
+        this.soundTimerInterval = setInterval(this.updateSoundTimer.bind(this), SOUND_TIMER_FREQ);
     }
 
-    restart() {
-        I = 0x50;
-        this.SP = 0;
-        this.PC = 0x200;
+    stopTimers(){
+        clearInterval(this.delayTimerInterval);
+        clearInterval(this.soundTimer);
+    }
+
+    reset() {
+        I = FONT_ADDRESS;
+        this.PC = PROGRAM_ADDRESS;
         this.delayTimer = 0;
         this.soundTimer = 0;
     }
 
-    loadFontToMemory() {
-        let address = 0x050;
-        for (const char in this.font) {
-            this.memory.load(this.font[char], address);
-            address += this.font[char].length;
-        }
-    }
-
-    loadProgramToMemory(program) {
-        let startAddress = 0x200;
-        this.memory.load(program, startAddress);
-    }
-
-    fetchCommand() {
-        const b1 = this.memory.read(this.PC);
-        const b2 = this.memory.read(this.PC + 1);
-        this.PC += 2;
-        return b1 << 8 | b2;
-    }
-
     cycle() {
-        const instruction = this.fetchCommand();
+        const instruction = this.memory.fetchInstruction(this.PC);
+        this.PC += 2;
+        const decodedInstruction = this.decode(instruction);
         console.log("fetched: " + instruction.toString(16).padStart(4, '0'));
-        this.decode(instruction);
+        this.execute(decodedInstruction);
     }
 
     updateDelayTimer() {
@@ -93,30 +55,31 @@ export class CPU {
         }
     }
 
-    // decode(rawInstruction) {
-    //     return {
-    //         opcode: instruction & 0xF000,
-    //         func: instruction & 0x000F,
-    //         vx: (instruction & 0x0F00) >> 8,
-    //         vy: (instruction & 0x00F0) >> 4,
-    //         n: instruction & 0x000F,
-    //         nn: instruction & 0x00FF,
-    //         nnn: instruction & 0x0FFF,
-    //     }
-    // }
+    decode(rawInstruction) {
+        return {
+            raw: rawInstruction,
+            opcode: rawInstruction & 0xF000,
+            func: rawInstruction & 0x000F,
+            vx: (rawInstruction & 0x0F00) >> 8,
+            vy: (rawInstruction & 0x00F0) >> 4,
+            n: rawInstruction & 0x000F,
+            nn: rawInstruction & 0x00FF,
+            nnn: rawInstruction & 0x0FFF,
+        }
+    }
 
-    decode(instruction) {
-        const opcode = instruction & 0xF000;
-        const func = instruction & 0x000F;
-        const vx = (instruction & 0x0F00) >> 8;
-        const vy = (instruction & 0x00F0) >> 4;
-        const n = instruction & 0x000F;
-        const nn = instruction & 0x00FF;
-        const nnn = instruction & 0x0FFF;
+    execute(instruction) {
+        const opcode = instruction.opcode;
+        const func = instruction.func;
+        const vx = instruction.vx;
+        const vy = instruction.vy;
+        const n = instruction.n;
+        const nn = instruction.nn;
+        const nnn = instruction.nnn;
 
         switch (opcode) {
             case 0x0000:
-                switch (instruction) {
+                switch (instruction.raw) {
                     case 0x00E0:
                         this.cls();
                         break;
@@ -199,7 +162,7 @@ export class CPU {
                 break;
 
             case 0xE000:
-                switch (instruction & 0x00FF) {
+                switch (instruction.raw & 0x00FF) {
                     case 0x009E:
                         this.skipPressed(vx);
                         break;
@@ -211,7 +174,7 @@ export class CPU {
                 }
                 break;
             case 0xF000:
-                switch (instruction & 0x00FF) {
+                switch (instruction.raw & 0x00FF) {
                     case 0x0007:
                         this.loadVxDt(vx);
                         break;

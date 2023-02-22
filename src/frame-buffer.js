@@ -2,6 +2,7 @@
 
 export class FrameBuffer {
 
+
   constructor(rows = 32, cols = 64){
     this.rows = rows;
     this.cols = cols;
