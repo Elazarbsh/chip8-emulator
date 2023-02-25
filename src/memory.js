@@ -5,6 +5,10 @@ export class Memory {
         this.memory = new Uint8Array(this.memorySize);
     }
 
+    reset(){
+        this.memory = new Uint8Array(this.memorySize);
+    }
+
     read(address) {
         return this.memory[address];
     }

@@ -1,0 +1,78 @@
+
+body{
+    font-family: 'Press Start 2P', cursive;
+    background: black;
+    color: white;
+}
+
+#info{
+    text-align: center;
+    line-height: 2;
+}
+
+#rom-selector{
+    font-family: 'Press Start 2P', cursive;
+    padding: 5px;
+}
+
+
+#myCanvas{
+    border: 3px solid white;
+}
+
+#navbar {
+    text-shadow: 3px 0 #DA0463;
+
+    background-color: black;
+    height: 70px;
+    margin: 0;
+    border-bottom: 3px solid white;
+    font-family: 'Press Start 2P', monospace;
+}
+
+#navbar a {
+    text-decoration: none;
+    color: white;
+}
+
+#navbar ul li {
+    float: left;
+    width: 150px;
+    text-align: center;
+}
+
+#navbar .wrapper {
+    width: 960px;
+    margin: 0 auto;
+}
+
+#navbar ul {
+    float: right;
+    list-style: none;
+    margin-top: 26px;
+}
+
+h1 {
+    font-size: 20px;
+    line-height: 68px;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 30px;
+    color: white;
+}
+
+#interface{
+    text-align: center;
+    margin-top: 2%;
+}
+
+#screen{
+    display: inline-block;
+}
+
+#game-picker{
+    margin-top: 2%;
+    text-align: center;
+    display: block;
+}
+

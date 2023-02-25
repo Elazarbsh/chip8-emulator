@@ -4,17 +4,25 @@ function uint8ArrayToHex(arr) {
   return [...arr].map(x => x.toString(16).padStart(2, '0')).join(' ');
 }
 
-fetch('/roms/PONG')
+const chip8 = new Chip8();
+
+document.getElementById('rom-selector').addEventListener('change', function() {
+  const rom = this.value;
+  fetch(`/roms/${rom}`)
   .then((res) => {
+    if(!res.ok){
+      throw new Error('ROM not found');
+    }
     return res.arrayBuffer();
   }).then((buffer) => {
-    const chip8 = new Chip8();
-    console.log(buffer.byteLength);
+    chip8.stop();
     const program = new Uint8Array(buffer);
-    console.log(program);
-    const hexString = uint8ArrayToHex(program);
-    console.log(hexString);
     chip8.loadFontToMemory();
     chip8.loadProgramToMemory(program);
     chip8.start();
+  }).catch((error) => {
+    console.log(`${error}`);
+    chip8.stop();
   });
+});
+

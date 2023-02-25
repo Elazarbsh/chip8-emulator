@@ -33,11 +33,20 @@ export class Chip8{
     }
 
     start(){
+        this.cpu.startTimers();
         this.cycleInterval = setInterval(this.cpu.cycle.bind(this.cpu), CLOCK_SPEED);        
     }
 
     pasue(){
+        this.cpu.stopTimers();
         clearInterval(this.cycleInterval);
+    }
+
+    stop(){
+        clearInterval(this.cycleInterval);
+        this.cpu.stopTimers();
+        this.cpu.reset();
+        this.display.update();
     }
 
     next(){

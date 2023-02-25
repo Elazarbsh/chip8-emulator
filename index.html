@@ -6,12 +6,71 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <link rel="stylesheet" href="/css/index.css">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
 </head>
 
 <body>
-    <h1>chip-8</h1>
-    <canvas id="myCanvas" width="800" height="400" style="border:1px solid #000000;">
-    </canvas>
+    <div id="navbar">
+        <div class="wrapper">
+            <ul>
+                <li><a href="https://github.com/Elazarbsh/chip8-emulator">Source</a></li>
+            </ul>
+            <h1>CHIP-8 EMULATOR</h1>
+        </div>
+    </div>
+
+    <div id="game-picker">
+        <select name="roms" id="rom-selector">
+            <optgroup>
+                <option value="choose ROM">choose ROM</option>
+                <option value="15PUZZLE">15PUZZLE</option>
+                <option value="BLINKY">BLINKY</option>
+                <option value="BLITZ">BLITZ</option>
+                <option value="BRIX">BRIX</option>
+                <option value="CONNECT4">CONNECT4</option>
+                <option value="GUESS">GUESS</option>
+                <option value="HIDDEN">HIDDEN</option>
+                <option value="IBM">IBM</option>
+                <option value="INVADERS">INVADERS</option>
+                <option value="KALEID">KALEID</option>
+                <option value="MAZE">MAZE</option>
+                <option value="MERLIN">MERLIN</option>
+                <option value="MISSILE">MISSILE</option>
+                <option value="PONG">PONG</option>
+                <option value="PONG2">PONG2</option>
+                <option value="SYZYGY">SYZYGY</option>
+                <option value="TANK">TANK</option>
+                <option value="TEST">TEST</option>
+                <option value="TETRIS">TETRIS</option>
+                <option value="TICTAC">TICTAC</option>
+                <option value="UFO">UFO</option>
+                <option value="VBRIX">VBRIX</option>
+                <option value="VERS">VERS</option>
+                <option value="WIPEOFF">WIPEOFF</option>
+            </optgroup>
+        </select>
+    </div>
+
+    <div id="interface">
+        <div id="screen">
+            <canvas id="myCanvas" width="800" height="400"></canvas>
+        </div>
+    </div>
+
+    <div id="info">
+        <p>Keys:
+            <br>
+            1 2 3 4
+            <br>
+            Q W E R
+            <br>
+            A S D F
+            <br>
+            Z X C V
+        </p>
+    </div>
     <script src="index.js" type="module"></script>
 </body>
 

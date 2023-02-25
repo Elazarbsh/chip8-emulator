@@ -6,6 +6,10 @@ export class RegisterFile{
         this.registers = new Uint8Array(registerCount);
     }
 
+    reset(){
+        this.registers = new Uint8Array(this.registerCount);
+    }
+
     getRegister(regIndex){
         return this.registers[regIndex];
     }

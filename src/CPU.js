@@ -14,8 +14,6 @@ export class CPU {
         this.frameBuffer = frameBuffer;
         this.display = display;
         this.keyboard = keyboard;
-        this.delayTimerInterval = setInterval(this.updateDelayTimer.bind(this), DELAY_TIMER_FREQ);
-        this.soundTimerInterval = setInterval(this.updateSoundTimer.bind(this), SOUND_TIMER_FREQ);
     }
 
     startTimers(){
@@ -29,17 +27,20 @@ export class CPU {
     }
 
     reset() {
-        I = FONT_ADDRESS;
+        this.I = FONT_ADDRESS;
         this.PC = PROGRAM_ADDRESS;
         this.delayTimer = 0;
         this.soundTimer = 0;
+        this.memory.reset();
+        this.registers.reset();
+        this.stack.reset();
+        this.cls();
     }
 
     cycle() {
         const instruction = this.memory.fetchInstruction(this.PC);
         this.PC += 2;
         const decodedInstruction = this.decode(instruction);
-        console.log("fetched: " + instruction.toString(16).padStart(4, '0'));
         this.execute(decodedInstruction);
     }
 
@@ -158,7 +159,6 @@ export class CPU {
                 break;
             case 0xD000:
                 this.draw(vx, vy, n);
-                this.display.update();
                 break;
 
             case 0xE000:
@@ -213,7 +213,8 @@ export class CPU {
     // 00E0
     // Clear the display.
     cls() {
-        frameBuffer.clearScreen();
+        this.frameBuffer.clearScreen();
+        this.display.update();
     }
 
     // 00EE
@@ -396,6 +397,7 @@ export class CPU {
             }
             yCoordinate++;
         }
+        this.display.update();
     }
 
 
@@ -469,7 +471,7 @@ export class CPU {
     // Store registers V0 through Vx in memory starting at location I.
     saveRegisters(vx) {
         for (let i = 0; i <= vx; i++) {
-            this.memory.read(this.I + i) = this.registers.getRegister(i);
+            this.memory.write(this.I + i, this.registers.getRegister(i));
         }
     }
 

@@ -1,9 +1,13 @@
 export class Stack{
     SP = 0;
-    
+
     constructor(size = 16){
         this.size = size;
         this.stack = new Uint16Array(size);
+    }
+
+    reset(){
+        this.stack = new Uint16Array(this.size);
     }
 
     push(value){
