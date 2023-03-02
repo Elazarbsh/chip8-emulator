@@ -16,7 +16,7 @@
   "bugs": {
     "url": "https://github.com/Elazarbsh/chip8-emulator/issues"
   },
-  "homepage": "https://github.com/Elazarbsh/chip8-emulator#readme",
+  "homepage": "https://elazarbsh.github.io/chip8-emulator",
   "devDependencies": {
     "clean-webpack-plugin": "^4.0.0",
     "copy-webpack-plugin": "^11.0.0",
