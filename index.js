@@ -8,7 +8,7 @@ const chip8 = new Chip8();
 
 document.getElementById('rom-selector').addEventListener('change', function() {
   const rom = this.value;
-  fetch(`/roms/${rom}`)
+  fetch(`roms/${rom}`)
   .then((res) => {
     if(!res.ok){
       throw new Error('ROM not found');
