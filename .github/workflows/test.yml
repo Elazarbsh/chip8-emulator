@@ -5,7 +5,7 @@ on:
 jobs:
   print-workflow:
     runs-on: ubuntu-latest
-        steps:
-          - name: say hello
-            run: echo "hello"
+    steps:
+      - name: say hello
+        run: echo "hello"
 
