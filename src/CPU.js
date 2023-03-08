@@ -7,7 +7,7 @@ export class CPU {
     delayTimer = 0;
     soundTimer = 0;
 
-    constructor(memory, stack, registers, frameBuffer, display, inputBuffer){
+    constructor(memory, stack, registers, frameBuffer, display, inputBuffer) {
         this.memory = memory;
         this.stack = stack;
         this.registers = registers;
@@ -16,12 +16,12 @@ export class CPU {
         this.inputBuffer = inputBuffer;
     }
 
-    startTimers(){
+    startTimers() {
         this.delayTimerInterval = setInterval(this.updateDelayTimer.bind(this), DELAY_TIMER_FREQ);
         this.soundTimerInterval = setInterval(this.updateSoundTimer.bind(this), SOUND_TIMER_FREQ);
     }
 
-    stopTimers(){
+    stopTimers() {
         clearInterval(this.delayTimerInterval);
         clearInterval(this.soundTimer);
     }
@@ -88,7 +88,7 @@ export class CPU {
                         this.ret();
                         break;
                     default:
-                        console.log(instruction + " is not implemented");
+                        throw new Error(`Instruction not implemented: ${instruction}`);
                 }
                 break;
             case 0x1000:
@@ -142,7 +142,7 @@ export class CPU {
                         this.shiftLeft(vx);
                         break;
                     default:
-                        console.log(instruction + " is not implemented");
+                        throw new Error(`Instruction not implemented: ${instruction}`);
                 }
                 break;
             case 0x9000:
@@ -170,7 +170,7 @@ export class CPU {
                         this.skipNotPressed(vx)
                         break;
                     default:
-                        console.log(instruction + " is not implemented");
+                        throw new Error(`Instruction not implemented: ${instruction}`);
                 }
                 break;
             case 0xF000:
@@ -202,11 +202,13 @@ export class CPU {
                     case 0x0065:
                         this.loadRegisters(vx);
                         break;
+                    default:
+                        throw new Error(`Instruction not implemented: ${instruction}`);
                 }
                 break;
 
             default:
-                console.log(instruction + " is not implemented");
+                throw new Error(`Instruction not implemented: ${instruction}`);
         }
     }
 
@@ -293,14 +295,14 @@ export class CPU {
     // 8XY3
     // Set Vx = Vx XOR Vy.
     xor(vx, vy) {
-        this.registers.setRegister(vx,this.registers.getRegister(vx) ^ this.registers.getRegister(vy));
+        this.registers.setRegister(vx, this.registers.getRegister(vx) ^ this.registers.getRegister(vy));
     }
 
     // 8XY4
     // Set Vx = Vx + Vy, set VF = carry.
     add(vx, vy) {
         if (this.registers.getRegister(vx) + this.registers.getRegister(vy) > 255) {
-            this.registers.setRegister(0xF,1);
+            this.registers.setRegister(0xF, 1);
         }
         this.registers.addToReg(vx, this.registers.getRegister(vy));
     }

@@ -27,22 +27,42 @@ describe('frame buffer', () => {
 
     });
 
-    it("should turn on the pixel at the specified position when setPixelOn is called", () => {
-        frameBuffer.setPixelOn(10, 20);
-        expect(frameBuffer.getPixelAt(10, 20)).toBe(1);
+    describe('set pixels', () => {
+        it("should turn on the pixel at the specified position when setPixelOn is called", () => {
+            frameBuffer.setPixelOn(10, 20);
+            expect(frameBuffer.getPixelAt(10, 20)).toBe(1);
+        });
+
+        it("should turn off the pixel at the specified position when setPixelOff is called", () => {
+            frameBuffer.setPixelOn(10, 20);
+            frameBuffer.setPixelOff(10, 20);
+            expect(frameBuffer.getPixelAt(10, 20)).toBe(0);
+        });
+
+        it("should throw an error when trying to set a row pixel out of bounds", () => {
+            expect(() => frameBuffer.setPixelOn(100, 0)).toThrow(/Invalid row or column index/);
+        });
+
+        it("should throw an error when trying to set a col pixel out of bounds", () => {
+            expect(() => frameBuffer.setPixelOff(0, 100)).toThrow(/Invalid row or column index/);
+        });
     });
 
-    it("should turn off the pixel at the specified position when setPixelOff is called", () => {
-        frameBuffer.setPixelOn(10, 20);
-        frameBuffer.setPixelOff(10, 20);
-        expect(frameBuffer.getPixelAt(10, 20)).toBe(0);
-    });
+    describe('get pixels', () => {
+        it("should return the correct value when getPixelAt is called", () => {
+            frameBuffer.setPixelOn(10, 20);
+            expect(frameBuffer.getPixelAt(10, 20)).toBe(1);
+            frameBuffer.setPixelOff(10, 20);
+            expect(frameBuffer.getPixelAt(10, 20)).toBe(0);
+        });
 
-    it("should return the correct value when getPixelAt is called", () => {
-        frameBuffer.setPixelOn(10, 20);
-        expect(frameBuffer.getPixelAt(10, 20)).toBe(1);
-        frameBuffer.setPixelOff(10, 20);
-        expect(frameBuffer.getPixelAt(10, 20)).toBe(0);
+        it("should throw an error if row index is out of bounds", () => {
+            expect(() => frameBuffer.getPixelAt(100, 0)).toThrow(/Invalid row or column index/);
+        });
+
+        it("should throw an error if col index is out of bounds", () => {
+            expect(() => frameBuffer.getPixelAt(0, 100)).toThrow(/Invalid row or column index/);
+        });
     });
 });
 

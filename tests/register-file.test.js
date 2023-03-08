@@ -10,7 +10,7 @@ beforeEach(() => {
 describe('getRegister', () => {
     it("should throw an error if the register index is out of range for getRegister", () => {
         const rf = new RegisterFile(4);
-        expect(() => rf.getRegister(5)).toThrow();
+        expect(() => rf.getRegister(5)).toThrow(/Invalid register index/);
     });
 });
 
@@ -23,7 +23,7 @@ describe('setRegister', () => {
 
     it("should throw an error if the register index is out of range for setRegister", () => {
         const rf = new RegisterFile(4);
-        expect(() => rf.setRegister(5, 10)).toThrow();
+        expect(() => rf.setRegister(5, 10)).toThrow(/Invalid register index/);
     });
 });
 
@@ -36,7 +36,7 @@ describe('addToReg', () => {
 
     it("should throw an error if the register index is out of range for addToReg", () => {
         const rf = new RegisterFile(4);
-        expect(() => rf.addToReg(5, 5)).toThrow();
+        expect(() => rf.addToReg(5, 5)).toThrow(/Invalid register index/);
     });
 });
 
@@ -49,12 +49,12 @@ describe('copyReg', () => {
 
     it("should throw an error if the register index is out of range for copyReg target", () => {
         const rf = new RegisterFile(4);
-        expect(() => rf.copyReg(5, 0)).toThrow();
+        expect(() => rf.copyReg(5, 0)).toThrow(/Invalid register index/);
     });
 
     it("should throw an error if the register index is out of range for copyReg source", () => {
         const rf = new RegisterFile(4);
-        expect(() => rf.copyReg(0, 5)).toThrow();
+        expect(() => rf.copyReg(0, 5)).toThrow(/Invalid register index/);
     });
 });
 

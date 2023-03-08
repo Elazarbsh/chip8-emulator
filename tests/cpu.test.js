@@ -51,6 +51,11 @@ describe('cpu cycle', () => {
         cpu.cycle();
         expect(frameBuffer.clearScreen).toBeCalledTimes(1);
     });
+
+    it("should throw an error if an instruction implementation doesnt exist", () => {
+        memory.fetchInstruction.mockReturnValueOnce(0xFFFF);
+        expect(() => cpu.cycle()).toThrow(/Instruction not implemented/);
+    });
 });
 
 describe('0x00E0 - clear screen', () => {

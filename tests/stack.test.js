@@ -40,7 +40,7 @@ describe('reset', () => {
         stack.push(2);
         stack.push(3);
         stack.reset();
-        expect(stack.pop()).toBeUndefined();
+        expect(() => stack.pop()).toThrow();
     });
 });
 

@@ -8,14 +8,22 @@ export class Stack{
 
     reset(){
         this.stack = new Uint16Array(this.size);
+        this.SP = 0;
     }
 
     push(value){
+        if(this.SP >= this.size){
+            throw new Error('Stack overflow. The stack is already full and cannot accept any more values.');
+        }
         this.stack[this.SP] = value;
         this.SP++;
+        
     }
 
     pop(){
+        if(this.SP <= 0){
+            throw new Error('pop called on empty stack');
+        }
         if (this.SP > 0) {
             this.SP--;
         }

@@ -23,15 +23,24 @@ export class FrameBuffer {
   }
 
   setPixelOn(x, y) {
+    this.validateCoordinates(x, y);
     this.display[y][x] = 1;
   }
 
   setPixelOff(x, y) {
+    this.validateCoordinates(x, y);
     this.display[y][x] = 0;
   }
 
   getPixelAt(x, y) {
+    this.validateCoordinates(x, y);
     return this.display[y][x];
+  }
+
+  validateCoordinates(row, col){
+    if (row < 0 || row >= this.rowCount || col < 0 || col >= this.colCount) {
+      throw new Error(`Invalid row or column index. The specified row or column index is out of range. row:${row}, col:${col}`);
+    }
   }
 }
 
