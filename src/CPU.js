@@ -438,8 +438,8 @@ export class CPU {
     // FX0A
     // Wait for a key press, store the value of the key in Vx.
     getKey(vx) {
-        const keyPressed = this.keyboard.getAnyKeyPressed;
-        if (keyPressed >= 0) {
+        const keyPressed = this.keyboard.getAnyKeyPressed();
+        if (keyPressed <= 0) {
             this.PC -= 2;
         } else {
             this.registers.setRegister(vx, keyPressed);
