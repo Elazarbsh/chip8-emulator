@@ -18,20 +18,21 @@ export class Keyboard {
         67: 0xB, // C B
         86: 0xF  // V F
     };
+    
+    keyState = new Array(16);
 
-    constructor() {
+    constructor(inputBuffer) {
+        this.inputBuffer = inputBuffer;
         window.addEventListener('keydown', this.onKeyDown.bind(this));
         window.addEventListener('keyup', this.onKeyUp.bind(this));
     }
-
-    keyState = new Array(16);
 
     onKeyDown(e) {
         const key = e.keyCode;
         if (!(key in this.keymap)) {
             return;
         }
-        this.keyState[this.keymap[key]] = true;
+        this.inputBuffer.setKeyPressedTrue(this.keymap[key]);
         console.log(this.keymap[key] + " pressed down");
     }
 
@@ -40,18 +41,9 @@ export class Keyboard {
         if (!(key in this.keymap)) {
             return;
         }
-        this.keyState[this.keymap[key]] = false;
+        this.inputBuffer.setKeyPressedFalse(this.keymap[key]);
         console.log(this.keymap[key] + " pressed up");
     }
-
-    isKeyPressed(chip8KeyCode) {
-        return this.keyState[chip8KeyCode];
-    }
-
-    getAnyKeyPressed() {
-        return this.keyState.indexOf(true);
-    }
-
 }
 
 

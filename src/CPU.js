@@ -7,13 +7,13 @@ export class CPU {
     delayTimer = 0;
     soundTimer = 0;
 
-    constructor(memory, stack, registers, frameBuffer, display, keyboard){
+    constructor(memory, stack, registers, frameBuffer, display, inputBuffer){
         this.memory = memory;
         this.stack = stack;
         this.registers = registers;
         this.frameBuffer = frameBuffer;
         this.display = display;
-        this.keyboard = keyboard;
+        this.inputBuffer = inputBuffer;
     }
 
     startTimers(){
@@ -404,7 +404,7 @@ export class CPU {
     // EX9E
     //Skip next instruction if key with the value of Vx is pressed.
     skipPressed(vx) {
-        if (this.keyboard.isKeyPressed(this.registers.getRegister(vx))) {
+        if (this.inputBuffer.isKeyPressed(this.registers.getRegister(vx))) {
             this.PC += 2;
         }
     }
@@ -412,7 +412,7 @@ export class CPU {
     // EXA1
     // Skip next instruction if key with the value of Vx is not pressed.
     skipNotPressed(vx) {
-        if (!this.keyboard.isKeyPressed(this.registers.getRegister(vx))) {
+        if (!this.inputBuffer.isKeyPressed(this.registers.getRegister(vx))) {
             this.PC += 2;
         }
     }
@@ -438,7 +438,7 @@ export class CPU {
     // FX0A
     // Wait for a key press, store the value of the key in Vx.
     getKey(vx) {
-        const keyPressed = this.keyboard.getAnyKeyPressed();
+        const keyPressed = this.inputBuffer.getAnyKeyPressed();
         if (keyPressed <= 0) {
             this.PC -= 2;
         } else {

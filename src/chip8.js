@@ -1,5 +1,6 @@
 import { FrameBuffer } from "./frame-buffer.js";
 import { Keyboard } from "./keyboard.js";
+import { InputBuffer } from "./input-buffer.js";
 import { Memory } from "./memory.js";
 import { Stack } from "./stack.js";
 import { Display } from "./display.js";
@@ -11,14 +12,14 @@ import { CLOCK_SPEED } from "../data/frequencies.js";
 import { DISPLAY_ROWS, DISPLAY_COLS, MEMORY_SIZE, REGISTER_COUNT } from "../data/constants.js";
 
 export class Chip8{
-
     frameBuffer = new FrameBuffer(DISPLAY_ROWS, DISPLAY_COLS);
-    keyboard = new Keyboard();
+    inputBuffer = new InputBuffer();
+    keyboard = new Keyboard(this.inputBuffer);
     memory = new Memory(MEMORY_SIZE);
     stack = new Stack();
     display = new Display(this.frameBuffer);
     registers = new RegisterFile(REGISTER_COUNT);
-    cpu = new CPU(this.memory, this.stack, this.registers, this.frameBuffer, this.display, this.keyboard);
+    cpu = new CPU(this.memory, this.stack, this.registers, this.frameBuffer, this.display, this.inputBuffer);
 
     loadFontToMemory() {
         let address = FONT_ADDRESS;
