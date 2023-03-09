@@ -4,6 +4,7 @@ on:
     branches:
       - dev
   workflow_dispatch:
+  pull_request:
   
 jobs:
   test-and-build:
@@ -11,10 +12,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Install Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: "14"
 
