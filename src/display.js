@@ -13,7 +13,7 @@ export class Display {
 
         for (let i = 0; i < this.frameBuffer.rowCount; i++) {
             for (let j = 0; j < this.frameBuffer.colCount; j++) {
-                if (this.frameBuffer.getPixelAt(j, i) == 1) {
+                if (this.frameBuffer.getPixelAt(i, j) == 1) {
                     ctx.fillStyle = 'white';
                 } else {
                     ctx.fillStyle = 'black';

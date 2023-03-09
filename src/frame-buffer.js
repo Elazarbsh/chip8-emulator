@@ -22,19 +22,19 @@ export class FrameBuffer {
     this.display = Array.from(Array(this.rows), () => new Array(this.cols).fill(0));
   }
 
-  setPixelOn(x, y) {
-    this.validateCoordinates(x, y);
-    this.display[y][x] = 1;
+  setPixelOn(row, col) {
+    this.validateCoordinates(row, col);
+    this.display[row][col] = 1;
   }
 
-  setPixelOff(x, y) {
-    this.validateCoordinates(x, y);
-    this.display[y][x] = 0;
+  setPixelOff(row, col) {
+    this.validateCoordinates(row, col);
+    this.display[row][col] = 0;
   }
 
-  getPixelAt(x, y) {
-    this.validateCoordinates(x, y);
-    return this.display[y][x];
+  getPixelAt(row, col) {
+    this.validateCoordinates(row, col);
+    return this.display[row][col];
   }
 
   validateCoordinates(row, col){

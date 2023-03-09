@@ -389,11 +389,11 @@ export class CPU {
                     break;
                 }
                 const currentBit = fontByte & j;
-                if (currentBit != 0 && this.frameBuffer.getPixelAt(xCoordinate, yCoordinate) != 0) {
-                    this.frameBuffer.setPixelOff(xCoordinate, yCoordinate);
+                if (currentBit != 0 && this.frameBuffer.getPixelAt(yCoordinate, xCoordinate) != 0) {
+                    this.frameBuffer.setPixelOff(yCoordinate, xCoordinate);
                     this.registers.setRegister(0xF, 1);
-                } else if (currentBit != 0 && this.frameBuffer.getPixelAt(xCoordinate, yCoordinate) == 0) {
-                    this.frameBuffer.setPixelOn(xCoordinate, yCoordinate);
+                } else if (currentBit != 0 && this.frameBuffer.getPixelAt(yCoordinate, xCoordinate) == 0) {
+                    this.frameBuffer.setPixelOn(yCoordinate, xCoordinate);
                 }
                 xCoordinate++;
             }
